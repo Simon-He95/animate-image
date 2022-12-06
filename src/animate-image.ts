@@ -1,4 +1,4 @@
-import { Canvas, getImageData, insertElement, randomHexColor, removeElement, useAnimationFrame } from 'simon-js-tool'
+import { Canvas, getImageData, insertElement, randomHexColor, removeElement, useAnimationFrame } from 'lazy-js-utils'
 
 interface AnimateImageOptions {
   images: string[]
@@ -47,7 +47,7 @@ export async function animateImage(options: AnimateImageOptions, callback?: () =
         point.update()
         point.render()
       })
-    }, 0)
+    })
   }
 
   function getPoint(imageData: any) {
