@@ -1,4 +1,4 @@
-import { Canvas, getImageData, insertElement, randomHexColor, removeElement, useAnimationFrame } from 'lazy-js-utils'
+import { Canvas, getImageData, insertElement, randomHexColor, removeElement, useRaf } from 'lazy-js-utils'
 
 interface AnimateImageOptions {
   images: string[]
@@ -33,7 +33,7 @@ export async function animateImage(options: AnimateImageOptions, callback?: () =
     const imageData = imageDatas.pop()!
     historyStack.push(imageData)
     getPoint(imageData)
-    stop = useAnimationFrame(() => {
+    stop = useRaf(() => {
       if (flag) {
         stop()
         color = randomHexColor()
@@ -65,7 +65,7 @@ export async function animateImage(options: AnimateImageOptions, callback?: () =
   }
 
   function awaitRun(s: number) {
-    useAnimationFrame(run, s, true)
+    useRaf(run, s, true)
   }
 
   run()
