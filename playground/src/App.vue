@@ -17,6 +17,7 @@ animateImage({
   ],
   container: '.main',
   infinity: true,
+  isUpdateFromLastPosition: true,
 })
 </script>
 

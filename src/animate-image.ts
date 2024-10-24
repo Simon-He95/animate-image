@@ -6,60 +6,95 @@ interface AnimateImageOptions {
   height?: number
   infinity?: boolean
   container?: string
+  duration?: number
+  delay?: number
+  isUpdateFromLastPosition?: boolean
+  background?: string
 }
 let color = randomHexColor()
 
 export async function animateImage(options: AnimateImageOptions, callback?: () => void): Promise<() => void> {
   const pointArr: any[] = []
   let flag = false
-  const { width: w, height: h, infinity, container = 'body', images } = options
+  const { width: w, height: h, infinity, container = 'body', images, duration = 1000, delay = 1000, isUpdateFromLastPosition, background = '#000' } = options
   const { clientWidth, clientHeight } = document.documentElement
   const width = w || clientWidth
   const height = h || clientHeight
   const { canvas, ctx } = new Canvas(width, height)
-  canvas.style.background = '#000'
+  canvas.style.background = background
   const historyStack: any[] = []
   const imageDatas = await Promise.all(images.map(getImageData))
   let stop: () => void
 
   const run = () => {
-    if (infinity && !imageDatas.length) { imageDatas.push(historyStack.shift()!) }
+    if (infinity && !imageDatas.length) {
+      imageDatas.push(historyStack.shift()!)
+    }
     else if (!imageDatas.length) {
       stop()
       return callback?.()
     }
     flag = false
-    pointArr.length = 0
-    const imageData = imageDatas.pop()!
-    historyStack.push(imageData)
-    getPoint(imageData)
+    if (isUpdateFromLastPosition) {
+      const prePointArr = Object.assign([], pointArr)
+      pointArr.length = 0
+      const imageData = imageDatas.pop()!
+      historyStack.push(imageData)
+      getPoint(imageData, prePointArr)
+      prePointArr.length = 0
+    }
+    else {
+      pointArr.length = 0
+      const imageData = imageDatas.pop()!
+      historyStack.push(imageData)
+      getPoint(imageData)
+    }
     stop = useRaf(() => {
       if (flag) {
         stop()
         color = randomHexColor()
-        return awaitRun(1000)
+        return setTimeout(() => awaitRun(duration), delay)
       }
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       pointArr.forEach((point) => {
         if (point.completed)
           flag = true
+        else
+          flag = false
 
         point.update()
         point.render()
       })
-    })
+    }, 0)
   }
 
-  function getPoint(imageData: any) {
+  function getPoint(imageData: any, prePointArr: any = []) {
     const { width, height, data } = imageData
+    let i = 0
+    let xV
+    let yV
     for (let h = 0; h < height; h += 4) {
       for (let w = 0; w < width; w += 4) {
         const position = (width * h + w) * 4
         // const r = data[position]; const g = data[position + 1]; const b = data[position + 2];
         const a = data[position + 3]
         // 获取不透明的点
-        if (a > 0)
-          pointArr.push(new Point(canvas, ctx, 1, w, h))
+        if (a > 0) {
+          const prePoint = prePointArr[i++]
+          let x = prePoint?.x
+          let y = prePoint?.y
+          if (x)
+            xV = x
+          else if (xV)
+            x = xV
+          if (y)
+            yV = y
+          else if (yV)
+            y = yV
+          pointArr.push(new Point({
+            canvas, ctx, size: 1, w, h, x, y,
+          }))
+        }
       }
     }
   }
@@ -90,11 +125,20 @@ class Point {
   spx: number
   spy: number
   completed = false
-  constructor(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, size: number, w: number, h: number) {
+  constructor(options: {
+    canvas: HTMLCanvasElement
+    ctx: CanvasRenderingContext2D
+    size: number
+    w: number
+    h: number
+    x?: number
+    y?: number
+  }) {
+    const { canvas, ctx, size, w, h, x, y } = options
     this.canvas = canvas
     this.ctx = ctx
-    this.x = Math.random() * canvas.width
-    this.y = Math.random() * canvas.height
+    this.x = x ?? Math.random() * canvas.width
+    this.y = y ?? Math.random() * canvas.height
     this.size = size
     this.w = w
     this.h = h
