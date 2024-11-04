@@ -65,7 +65,7 @@ export async function animateImage(options: AnimateImageOptions, callback?: () =
         point.update()
         point.render()
       })
-    }, 0)
+    })
   }
 
   function getPoint(imageData: any, prePointArr: any = []) {
@@ -100,7 +100,10 @@ export async function animateImage(options: AnimateImageOptions, callback?: () =
   }
 
   function awaitRun(s: number) {
-    useRaf(run, s, true)
+    useRaf(run, {
+      delta: s,
+      autoStop: true,
+    })
   }
 
   run()

@@ -59,7 +59,7 @@
     "bumpp": "^7.2.0",
     "eslint": "^8.57.1",
     "eslint-plugin-n": "^15.7.0",
-    "lazy-js-utils": "^0.1.11",
+    "lazy-js-utils": "^0.1.13",
     "pkgroll": "^1.11.1",
     "typescript": "^4.9.5",
     "vite": "^3.2.11",
