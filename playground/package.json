@@ -10,17 +10,17 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@vueuse/core": "^8.1.1",
-    "vue": "^3.5.12",
-    "vue-router": "^4.4.5"
+    "@vueuse/core": "^8.9.4",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^0.18.8",
-    "@iconify-json/carbon": "^1.1.2",
-    "@types/node": "^17.0.21",
-    "@unocss/reset": "^0.29.2",
-    "@vitejs/plugin-vue": "^3.0.1",
-    "@vue/test-utils": "^2.0.0-rc.18",
+    "@antfu/eslint-config": "^0.18.9",
+    "@iconify-json/carbon": "^1.2.8",
+    "@types/node": "^17.0.45",
+    "@unocss/reset": "^0.29.6",
+    "@vitejs/plugin-vue": "^3.2.0",
+    "@vue/test-utils": "^2.4.6",
     "eslint": "^8.57.1",
     "jsdom": "^19.0.0",
     "typescript": "^4.9.5",
