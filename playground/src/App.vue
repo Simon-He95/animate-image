@@ -18,6 +18,7 @@ animateImage({
   container: '.main',
   infinity: true,
   isUpdateFromLastPosition: true,
+  easing: 'ease-in-out',
 })
 </script>
 

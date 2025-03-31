@@ -11,6 +11,7 @@ interface AnimateImageOptions {
   isUpdateFromLastPosition?: boolean
   background?: string
   pixelStep?: number // Add this property
+  easing?: string // Add easing property
 }
 
 interface ImageData {
@@ -35,7 +36,19 @@ function getPointFromPool(options: PointOption): Point {
 export async function animateImage(options: AnimateImageOptions, callback?: () => void): Promise<() => void> {
   const pointArr: Point[] = []
   let flag = false
-  const { width: w, height: h, infinity, container = 'body', images, duration = 1000, delay = 1000, isUpdateFromLastPosition, background = '#000', pixelStep = 4 } = options
+  const {
+    width: w,
+    height: h,
+    infinity,
+    container = 'body',
+    images,
+    duration = 1000,
+    delay = 1000,
+    isUpdateFromLastPosition,
+    background = '#000',
+    pixelStep = 4,
+    easing = 'easeInOutCubic', // Default easing
+  } = options
   const { clientWidth, clientHeight } = document.documentElement
   const width = w || clientWidth
   const height = h || clientHeight
@@ -130,7 +143,16 @@ export async function animateImage(options: AnimateImageOptions, callback?: () =
           const fillStyle = rgba
           // Use the pool when creating points
           pointArr.push(getPointFromPool({
-            canvas, ctx, size: 1, w, h, x, y, fillStyle, initialFillStyle,
+            canvas,
+            ctx,
+            size: 1,
+            w,
+            h,
+            x,
+            y,
+            fillStyle,
+            initialFillStyle,
+            easing, // Pass the easing option
           }))
         }
       }
@@ -167,6 +189,7 @@ interface PointOption {
   y?: number
   fillStyle?: string
   initialFillStyle?: string
+  easing?: string
 }
 class Point {
   canvas: HTMLCanvasElement
@@ -187,6 +210,7 @@ class Point {
   startY: number
   startTime = 0
   animationDuration = 1000 // ms
+  easing = 'easeInOutCubic'
 
   constructor(options: PointOption) {
     const { canvas, ctx, size, w, h, x, y } = options
@@ -205,6 +229,7 @@ class Point {
     this.startX = this.x
     this.startY = this.y
     this.startTime = performance.now()
+    this.easing = options.easing || 'easeInOutCubic'
     return this
   }
 
@@ -221,47 +246,110 @@ class Point {
     this.startX = this.x
     this.startY = this.y
     this.startTime = performance.now()
+    this.easing = options.easing || 'easeInOutCubic'
     return this
   }
 
-  // Replace the update method with time-based animation
+  // Apply the selected easing function
+  applyEasing(t: number): number {
+    switch (this.easing) {
+      case 'linear': return this.linear(t)
+      case 'easeInQuad': return this.easeInQuad(t)
+      case 'easeOutQuad': return this.easeOutQuad(t)
+      case 'easeInOutQuad': return this.easeInOutQuad(t)
+      case 'easeInCubic': return this.easeInCubic(t)
+      case 'easeOutCubic': return this.easeOutCubic(t)
+      case 'easeInOutCubic': return this.easeInOutCubic(t)
+      case 'easeInElastic': return this.easeInElastic(t)
+      case 'easeOutElastic': return this.easeOutElastic(t)
+      case 'easeInOutElastic': return this.easeInOutElastic(t)
+      case 'easeInBounce': return this.easeInBounce(t)
+      case 'easeOutBounce': return this.easeOutBounce(t)
+      case 'easeInOutBounce': return this.easeInOutBounce(t)
+      default: return this.easeInOutCubic(t)
+    }
+  }
+
+  // Update method to use the selected easing
   update(currentTime = performance.now()) {
-    // Calculate progress (0 to 1)
     const elapsed = currentTime - this.startTime
     let progress = Math.min(1, elapsed / this.animationDuration)
 
-    // Apply easing function for smooth acceleration/deceleration
-    progress = this.easeInOutCubic(progress)
+    // Apply selected easing function
+    progress = this.applyEasing(progress)
 
-    // Update position using interpolation
     this.x = this.startX + (this.w - this.startX) * progress
     this.y = this.startY + (this.h - this.startY) * progress
 
-    // Update completion state
     this.completed = progress >= 0.999
   }
 
-  // Easing functions for smoother motion
+  // Easing library implementation
+  linear(t: number): number {
+    return t
+  }
+
+  easeInQuad(t: number): number {
+    return t * t
+  }
+
+  easeOutQuad(t: number): number {
+    return t * (2 - t)
+  }
+
+  easeInOutQuad(t: number): number {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t
+  }
+
+  easeInCubic(t: number): number {
+    return t * t * t
+  }
+
+  easeOutCubic(t: number): number {
+    return (--t) * t * t + 1
+  }
+
   easeInOutCubic(t: number): number {
     return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
   }
 
-  // Calculate progress from 0 (start) to 1 (destination)
-  getProgress(): number {
-    // Calculate distance from starting position to current position
-    const currentDistanceX = Math.abs(this.x - this.w)
-    const currentDistanceY = Math.abs(this.y - this.h)
+  easeInElastic(t: number): number {
+    return t === 0 ? 0 : t === 1 ? 1 : -(2 ** (10 * t - 10)) * Math.sin((t * 10 - 10.75) * ((2 * Math.PI) / 3))
+  }
 
-    // Calculate total distance from original position to target
-    const originalDistanceX = Math.abs(this.offsetX) * 20 * 2
-    const originalDistanceY = Math.abs(this.offsetY) * 20 * 2
+  easeOutElastic(t: number): number {
+    return t === 0 ? 0 : t === 1 ? 1 : 2 ** (-10 * t) * Math.sin((t * 10 - 0.75) * ((2 * Math.PI) / 3)) + 1
+  }
 
-    // Combine into a single progress value (0 to 1)
-    const progressX = 1 - (currentDistanceX / originalDistanceX || 0)
-    const progressY = 1 - (currentDistanceY / originalDistanceY || 0)
+  easeInOutElastic(t: number): number {
+    return t === 0
+      ? 0
+      : t === 1
+        ? 1
+        : t < 0.5
+          ? -(2 ** (20 * t - 10) * Math.sin((20 * t - 11.125) * ((2 * Math.PI) / 4.5))) / 2
+          : (2 ** (-20 * t + 10) * Math.sin((20 * t - 11.125) * ((2 * Math.PI) / 4.5))) / 2 + 1
+  }
 
-    // Use the average of both axes' progress
-    return Math.min(1, Math.max(0, (progressX + progressY) / 2))
+  easeInBounce(t: number): number {
+    return 1 - this.easeOutBounce(1 - t)
+  }
+
+  easeOutBounce(t: number): number {
+    if (t < 1 / 2.75)
+      return 7.5625 * t * t
+    else if (t < 2 / 2.75)
+      return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75
+    else if (t < 2.5 / 2.75)
+      return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375
+    else
+      return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375
+  }
+
+  easeInOutBounce(t: number): number {
+    return t < 0.5
+      ? (1 - this.easeOutBounce(1 - 2 * t)) / 2
+      : (1 + this.easeOutBounce(2 * t - 1)) / 2
   }
 
   // Helper to interpolate between colors
@@ -306,6 +394,13 @@ class Point {
 
     this.ctx.fill()
     this.ctx.closePath()
+  }
+
+  getProgress(): number {
+    // For best results, use the same progress calculation as the motion
+    const elapsed = performance.now() - this.startTime
+    const progress = Math.min(1, elapsed / this.animationDuration)
+    return this.applyEasing(progress)
   }
 }
 
