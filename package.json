@@ -1,6 +1,6 @@
 {
   "name": "animate-image",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "packageManager": "pnpm@7.33.7",
   "description": "animate-image",
   "author": "Simon He",
